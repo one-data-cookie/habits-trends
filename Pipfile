@@ -4,12 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-marimo = {extras = ["sql"], version = "*"}
+marimo = {extras = ["recommended"], version = "*"}
 pandas = "*"
-numpy = "*"
+pyarrow = "*"
 
 [dev-packages]
 
 [requires]
 python_version = "3.12"
-python_full_version = "3.12.7"
