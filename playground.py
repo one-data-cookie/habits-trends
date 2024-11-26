@@ -29,7 +29,7 @@ def __(df, mo):
                 strptime(Date, '%d %b %Y')::date AS day,
                 Name as name,
                 case 
-                    when Name in ('Sleep', 'Screen time') 
+                    when Name in ('Sleep time', 'Screen time') 
                     then Quantity::float / 60 
                     else Quantity::float 
                 end as quantity
@@ -72,59 +72,93 @@ def __(sql):
 
     plt.gca()
     plt.show()
-
     return filter_name, filtered_sql, pl, plt
 
 
 @app.cell
 def __(pl, plt, sql):
+    from datetime import timedelta
+
     # Get unique values of the 'name' column
     unique_names = sorted(sql["name"].unique())
 
+    # Filter for the last 28 days
+    sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
+
     # Calculate number of rows and columns for subplots
     n = len(unique_names)
-    cols = 2  # Two plots per row
-    rows = (n + 1) // 2  # Calculate number of rows needed
+    cols = 2  # Two plots per name (line and bar)
+    rows = n  # Each name gets one row
 
     # Create a figure with subplots
-    plt.figure(figsize=(10, 5 * rows))
+    plt.figure(figsize=(15, 5 * rows))
 
-    # Iterate over each unique name and plot in a subplot
-    for i, name in enumerate(unique_names, 1):
-        # Create a subplot
-        plt.subplot(rows, cols, i)
-
+    # Iterate over each unique name and plot both charts
+    for i, name in enumerate(unique_names):
         # Filter data for the current group
         group = sql.filter(pl.col("name") == name)
+        group_last_28_days = sql_last_28_days.filter(pl.col("name") == name)
 
-        # Calculate the mean from quantity
+        # Calculate means
         group_mean = group["quantity"].mean()
+        group_last_28_days_mean = group_last_28_days["quantity"].mean()
 
-        # Plot the data
+        # Line Chart: Moving Average
+        plt.subplot(rows, cols, i * cols + 1)
         plt.plot(
             group["day"].to_list(),
             group["moving_avg"].to_list(),
             label="Moving Avg",
+            color="blue",
         )
         plt.axhline(y=group_mean, color="r", linestyle="--", label="Mean")
-
         plt.xlabel("Day")
         plt.ylabel("Moving Avg")
-        plt.title(f"My stats for {name}\nAvg: {group_mean:.2f}")
+        plt.title(f"Moving 28d Avg of {name}\nAvg: {group_mean:.2f}")
         plt.xticks(rotation=90)
         plt.legend()
+
+        # Bar Chart: Daily Quantity
+        plt.subplot(rows, cols, i * cols + 2)
+        plt.bar(
+            group_last_28_days["day"].to_list(),
+            group_last_28_days["quantity"].to_list(),
+            label="Quantity",
+            color="skyblue",
+            edgecolor="blue",
+        )
+        plt.axhline(
+            y=group_last_28_days_mean,
+            color="red",
+            linestyle="--",
+            label="Mean",
+        )
+        plt.xlabel("Day")
+        plt.ylabel("Quantity")
+        plt.title(f"Last 28d of {name}\nAvg: {group_last_28_days_mean:.2f}")
+        plt.xticks(rotation=90, fontsize=8)
+        plt.legend()
+        plt.grid(axis="y", linestyle="--", alpha=0.7)
 
     # Adjust layout to prevent overlap
     plt.tight_layout()
 
     # Show the plot
     plt.show()
-    return cols, group, group_mean, i, n, name, rows, unique_names
-
-
-@app.cell
-def __():
-    return
+    return (
+        cols,
+        group,
+        group_last_28_days,
+        group_last_28_days_mean,
+        group_mean,
+        i,
+        n,
+        name,
+        rows,
+        sql_last_28_days,
+        timedelta,
+        unique_names,
+    )
 
 
 if __name__ == "__main__":
