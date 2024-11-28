@@ -10,8 +10,11 @@ def __(mo):
         r"""
         ### TODOs
 
-        - Try altair
-        - Choose between maplotlib and seaborn
+        - Confirm the setup
+        - Try all in Pythonista
+        - Choose the right library
+        - Delete everything else
+        - Finish it up
         """
     )
     return
@@ -283,7 +286,10 @@ def __(go, make_subplots, pl, sql, timedelta):
         cols=2, 
         subplot_titles=[
             item for _name in _unique_names 
-            for item in [f"Moving 28d Avg of {_name}", f"Last 28d of {_name}"]
+            for item in [
+                f"Moving 28d Avg of {_name} | Avg: {sql.filter(pl.col('name') == _name)['quantity'].mean():.2f}", 
+                f"Last 28d of {_name} | Avg: {_sql_last_28_days.filter(pl.col('name') == _name)['quantity'].mean():.2f}"
+            ]
         ],
         vertical_spacing=0.05,  # Reduced vertical spacing
         horizontal_spacing=0.05
@@ -330,7 +336,9 @@ def __(go, make_subplots, pl, sql, timedelta):
                 y=_group_last_28_days["quantity"].to_list(), 
                 name='Quantity',
                 marker_color='skyblue',
-                marker_line_color='blue'
+                marker_line_color='blue',
+                customdata=_group_last_28_days["day"].dt.strftime('%d %b').to_list(),
+                hovertemplate='Day: %{customdata}<br>Quantity: %{y:.2f}<extra></extra>',
             ),
             row=_i, col=2
         )
@@ -351,17 +359,30 @@ def __(go, make_subplots, pl, sql, timedelta):
         if _name in _fixed_zero_to_one_metrics:
             _fig.update_yaxes(range=[0, 1], row=_i, col=1)
             _fig.update_yaxes(range=[0, 1], row=_i, col=2)
+        
+        # Increase y-axis ticks
+        _fig.update_yaxes(nticks=10, row=_i, col=1)
+        _fig.update_yaxes(nticks=10, row=_i, col=2)
+        
+        # Update x-axis for bar chart with date formatting and rotation
+        _fig.update_xaxes(
+            tickangle=-90,
+            tickvals=_group_last_28_days["day"].to_list(),
+            ticktext=_group_last_28_days["day"].dt.strftime('%m-%d').to_list(),
+            row=_i, 
+            col=2
+        )
 
     # Update layout
     _fig.update_layout(
-        height=300 * len(_unique_names),  # Reduced height per subplot
-        width=1200,
+        height=300 * len(_unique_names),
+        width=1080,
         title_text='Metric Analysis',
-        showlegend=False
+        showlegend=False,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        font=dict(size=10)
     )
-
-    # Rotate x-axis labels
-    _fig.update_xaxes(tickangle=90)
 
     # Show the plot
     _fig.show()
