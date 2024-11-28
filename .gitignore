@@ -1,1 +1,6 @@
+# Ignore private files
 AwesomeHabits.csv
+
+# Ignore local files
+*.pyc
+__pycache__/
