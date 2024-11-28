@@ -1,4 +1,4 @@
-# Ignore private files
+# Private files
 AwesomeHabits.csv
 
 # Python-generated files
@@ -8,3 +8,6 @@ build/
 dist/
 wheels/
 *.egg-info
+
+# Virtual environments
+.venv
