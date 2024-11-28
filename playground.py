@@ -1,7 +1,20 @@
 import marimo
 
-__generated_with = "0.9.23"
+__generated_with = "0.9.27"
 app = marimo.App(width="medium")
+
+
+@app.cell
+def __(mo):
+    mo.md(
+        r"""
+        ### TODOs
+
+        - Try altair
+        - Choose between maplotlib and seaborn
+        """
+    )
+    return
 
 
 @app.cell
