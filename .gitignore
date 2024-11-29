@@ -1,6 +1,9 @@
 # Private files
 AwesomeHabits.csv
 
+# Local files
+.DS_Store
+
 # Python-generated files
 __pycache__/
 *.py[oc]
