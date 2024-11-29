@@ -5,33 +5,30 @@ app = marimo.App(width="medium")
 
 
 @app.cell
-def __(mo):
-    mo.md(
-        r"""
-        ### TODOs
-
-        - Confirm the setup
-        - Try all in Pythonista
-        - Choose the right library
-        - Delete everything else
-        - Finish it up
-        """
-    )
-    return
-
-
-@app.cell
 def __():
+    import altair as alt
     import matplotlib.pyplot as plt
     import marimo as mo
     import pandas as pd
     import polars as pl
     import plotly.graph_objects as go
+    import plotly.io as pio
     import seaborn as sns
 
     from datetime import timedelta
     from plotly.subplots import make_subplots
-    return go, make_subplots, mo, pd, pl, plt, sns, timedelta
+    return (
+        alt,
+        go,
+        make_subplots,
+        mo,
+        pd,
+        pio,
+        pl,
+        plt,
+        sns,
+        timedelta,
+    )
 
 
 @app.cell
@@ -95,21 +92,25 @@ def __(pl, plt, sql):
 
 
 @app.cell
-def __(pl, plt, sql, timedelta):
+def __(sql):
     # Add a list to specify metrics that should have y-axis fixed from 0 to 1
-    _fixed_zero_to_one_metrics = [
+    fixed_zero_to_one_metrics = [
         "No meat", "No alcohol", "No screen",
         "Read some", "Take vitamins", "Exercise some", "Walk Falco"
     ]
 
     # Get unique values of the 'name' column
-    _unique_names = sorted(sql["name"].unique())
+    unique_names = sorted(sql["name"].unique())
+    return fixed_zero_to_one_metrics, unique_names
 
+
+@app.cell
+def __(fixed_zero_to_one_metrics, pl, plt, sql, timedelta, unique_names):
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
     # Calculate number of rows and columns for subplots
-    _n = len(_unique_names)
+    _n = len(unique_names)
     _cols = 2  # Two plots per name (line and bar)
     _rows = _n  # Each name gets one row
 
@@ -117,7 +118,7 @@ def __(pl, plt, sql, timedelta):
     plt.figure(figsize=(15, 5 * _rows))
 
     # Iterate over each unique name and plot both charts
-    for _i, _name in enumerate(_unique_names):
+    for _i, _name in enumerate(unique_names):
         # Filter data for the current group
         _group = sql.filter(pl.col("name") == _name)
         _group_last_28_days = _sql_last_28_days.filter(pl.col("name") == _name)
@@ -146,7 +147,7 @@ def __(pl, plt, sql, timedelta):
         plt.legend([_handles[_idx] for _idx in _order], [_labels[_idx] for _idx in _order])
 
         # Set y-axis limits to 0-1 if the metric is in the fixed list
-        if _name in _fixed_zero_to_one_metrics:
+        if _name in fixed_zero_to_one_metrics:
             plt.ylim(0, 1)
 
         # Bar Chart: Daily Quantity
@@ -174,7 +175,7 @@ def __(pl, plt, sql, timedelta):
         plt.grid(axis="y", linestyle="--", alpha=0.7)
 
         # Set y-axis limits to 0-1 if the metric is in the fixed list
-        if _name in _fixed_zero_to_one_metrics:
+        if _name in fixed_zero_to_one_metrics:
             plt.ylim(0, 1)
 
     # Adjust layout to prevent overlap
@@ -186,28 +187,27 @@ def __(pl, plt, sql, timedelta):
 
 
 @app.cell
-def __(pl, plt, sns, sql, timedelta):
-    # Add a list to specify metrics that should have y-axis fixed from 0 to 1
-    _fixed_zero_to_one_metrics = [
-        "No meat", "No alcohol", "No screen",
-        "Read some", "Take vitamins", "Exercise some", "Walk Falco"
-    ]
-
-    # Get unique values of the 'name' column
-    _unique_names = sorted(sql["name"].unique())
-
+def __(
+    fixed_zero_to_one_metrics,
+    pl,
+    plt,
+    sns,
+    sql,
+    timedelta,
+    unique_names,
+):
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
     # Create figure
     _fig, _axes = plt.subplots(
-        nrows=len(_unique_names), 
+        nrows=len(unique_names), 
         ncols=2, 
-        figsize=(15, 5 * len(_unique_names))  # Increased vertical space
+        figsize=(15, 5 * len(unique_names))  # Increased vertical space
     )
 
     # Iterate over each unique name and plot both charts
-    for _i, _name in enumerate(_unique_names):
+    for _i, _name in enumerate(unique_names):
         # Filter data for the current group
         _group = sql.filter(pl.col("name") == _name)
         _group_last_28_days = _sql_last_28_days.filter(pl.col("name") == _name)
@@ -254,7 +254,7 @@ def __(pl, plt, sns, sql, timedelta):
         _axes[_i, 1].legend() # keep the original order
 
         # Set y-axis limits to 0-1 if the metric is in the fixed list
-        if _name in _fixed_zero_to_one_metrics:
+        if _name in fixed_zero_to_one_metrics:
             _axes[_i, 0].set_ylim(0, 1)
             _axes[_i, 1].set_ylim(0, 1)
 
@@ -267,25 +267,24 @@ def __(pl, plt, sns, sql, timedelta):
 
 
 @app.cell
-def __(go, make_subplots, pl, sql, timedelta):
-    # Add a list to specify metrics that should have y-axis fixed from 0 to 1
-    _fixed_zero_to_one_metrics = [
-        "No meat", "No alcohol", "No screen",
-        "Read some", "Take vitamins", "Exercise some", "Walk Falco"
-    ]
-
-    # Get unique values of the 'name' column
-    _unique_names = sorted(sql["name"].unique())
-
+def __(
+    fixed_zero_to_one_metrics,
+    go,
+    make_subplots,
+    pl,
+    sql,
+    timedelta,
+    unique_names,
+):
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
     # Create subplots
     _fig = make_subplots(
-        rows=len(_unique_names), 
+        rows=len(unique_names), 
         cols=2, 
         subplot_titles=[
-            item for _name in _unique_names 
+            item for _name in unique_names 
             for item in [
                 f"Moving 28d Avg of {_name} | Avg: {sql.filter(pl.col('name') == _name)['quantity'].mean():.2f}", 
                 f"Last 28d of {_name} | Avg: {_sql_last_28_days.filter(pl.col('name') == _name)['quantity'].mean():.2f}"
@@ -296,7 +295,7 @@ def __(go, make_subplots, pl, sql, timedelta):
     )
 
     # Iterate over each unique name and plot both charts
-    for _i, _name in enumerate(_unique_names, 1):
+    for _i, _name in enumerate(unique_names, 1):
         # Filter data for the current group
         _group = sql.filter(pl.col("name") == _name)
         _group_last_28_days = _sql_last_28_days.filter(pl.col("name") == _name)
@@ -356,14 +355,14 @@ def __(go, make_subplots, pl, sql, timedelta):
         )
 
         # Set y-axis limits to 0-1 if the metric is in the fixed list
-        if _name in _fixed_zero_to_one_metrics:
+        if _name in fixed_zero_to_one_metrics:
             _fig.update_yaxes(range=[0, 1], row=_i, col=1)
             _fig.update_yaxes(range=[0, 1], row=_i, col=2)
-        
+
         # Increase y-axis ticks
         _fig.update_yaxes(nticks=10, row=_i, col=1)
         _fig.update_yaxes(nticks=10, row=_i, col=2)
-        
+
         # Update x-axis for bar chart with date formatting and rotation
         _fig.update_xaxes(
             tickangle=-90,
@@ -375,7 +374,7 @@ def __(go, make_subplots, pl, sql, timedelta):
 
     # Update layout
     _fig.update_layout(
-        height=300 * len(_unique_names),
+        height=300 * len(unique_names),
         width=1080,
         title_text='Metric Analysis',
         showlegend=False,
@@ -386,6 +385,98 @@ def __(go, make_subplots, pl, sql, timedelta):
 
     # Show the plot
     _fig.show()
+
+
+    # Export to PNG
+    #pio.write_image(_fig, "plot.png")
+
+    # Export to JPEG
+    #pio.write_image(_fig, "plot.jpeg", format="jpeg")
+
+    # Save the figure as an HTML file
+    # pio.write_html(_fig, file="plot.html", auto_open=False)
+    return
+
+
+@app.cell
+def __(
+    alt,
+    dropdown,
+    fixed_zero_to_one_metrics,
+    mo,
+    pd,
+    pl,
+    sql,
+    timedelta,
+):
+    # Filter for the last 28 days
+    _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
+
+    # Filter data for the current group
+    _group = sql.filter(pl.col("name") == dropdown.value)
+    _group_last_28_days = _sql_last_28_days.filter(pl.col("name") == dropdown.value)
+
+    # Convert to Pandas for Altair compatibility
+    _group_df = _group.to_pandas()
+    _group_last_28_days_df = _group_last_28_days.to_pandas()
+
+    # Moving Average Line Chart
+    moving_avg_chart = alt.Chart(_group_df).mark_line(color="blue").encode(
+        x="day:T",
+        y=alt.Y(
+            "moving_avg:Q",
+            scale=(
+                alt.Scale(domain=[0, 1])  # Fixed domain for specific metrics
+                if dropdown.value in fixed_zero_to_one_metrics
+                else alt.Scale(domain=[_group_df["moving_avg"].min()*0.9, _group_df["moving_avg"].max()*1.1])
+            )
+        ),
+        tooltip=["day:T", "moving_avg:Q"]
+    ).properties(
+        title=f"Moving 28d Avg of {dropdown.value} | Avg: {_group_df['quantity'].mean():.2f}",
+        width=400,
+        height=400
+    )
+
+    dots = alt.Chart(_group_df).mark_point(filled=True, size=20, color="blue").encode(
+            x="day:T",
+            y="moving_avg:Q",
+            tooltip=["day:T", "moving_avg:Q"]  # Tooltip for points
+    )
+
+    # Mean line for Moving Average
+    mean_line = alt.Chart(pd.DataFrame({"mean": [_group_df["quantity"].mean()]})).mark_rule(color="red", strokeDash=[5, 5]).encode(
+        y="mean:Q"
+    )
+
+    # Daily Quantity Bar Chart (Last 28 Days)
+    bar_chart = alt.Chart(_group_last_28_days_df).mark_bar(color="skyblue").encode(
+        x="day:T",
+        y=alt.Y("quantity:Q", scale=alt.Scale(domain=[0, 1]) if dropdown.value in fixed_zero_to_one_metrics else alt.Scale()),
+        tooltip=["day:T", "quantity:Q"]
+    ).properties(
+        title=f"Last 28d of {dropdown.value} | Avg: {_group_last_28_days_df['quantity'].mean():.2f}",
+        width=400,
+        height=400
+    )
+
+    # Display the chart
+    chart_l = mo.ui.altair_chart(moving_avg_chart + dots + mean_line)
+    chart_r = mo.ui.altair_chart(bar_chart)
+    return bar_chart, chart_l, chart_r, dots, mean_line, moving_avg_chart
+
+
+@app.cell
+def __(mo, unique_names):
+    dropdown = mo.ui.dropdown(unique_names, value='Exercise some')
+    dropdown
+    return (dropdown,)
+
+
+@app.cell
+def __(chart_l, chart_r, mo):
+    # In a new cell, display the chart
+    mo.hstack([chart_l, chart_r])
     return
 
 
