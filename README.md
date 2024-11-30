@@ -1,4 +1,5 @@
 ## TODOs:
+- [ ] Zjistit ohledne API
 - [ ] Nasetupovat posilani emails
 - [ ] Nasetupovat otevirani webapp
 - [ ] Udelat designs
@@ -7,4 +8,3 @@
 - [ ] Zpracovat mood
 - [ ] Zpracovat goals
 - [ ] Dat vsecko do novych — alert.py a app.py
-
