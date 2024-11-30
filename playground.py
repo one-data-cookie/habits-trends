@@ -17,18 +17,7 @@ def __():
 
     from datetime import timedelta
     from plotly.subplots import make_subplots
-    return (
-        alt,
-        go,
-        make_subplots,
-        mo,
-        pd,
-        pio,
-        pl,
-        plt,
-        sns,
-        timedelta,
-    )
+    return alt, go, make_subplots, mo, pd, pio, pl, plt, sns, timedelta
 
 
 @app.cell
@@ -271,6 +260,7 @@ def __(
     fixed_zero_to_one_metrics,
     go,
     make_subplots,
+    pio,
     pl,
     sql,
     timedelta,
@@ -391,7 +381,7 @@ def __(
     #pio.write_image(_fig, "plot.png")
 
     # Export to JPEG
-    #pio.write_image(_fig, "plot.jpeg", format="jpeg")
+    pio.write_image(_fig, "plot.jpeg", format="jpeg")
 
     # Save the figure as an HTML file
     # pio.write_html(_fig, file="plot.html", auto_open=False)
@@ -478,6 +468,80 @@ def __(chart_l, chart_r, mo):
     # In a new cell, display the chart
     mo.hstack([chart_l, chart_r])
     return
+
+
+@app.cell
+def __():
+    from dotenv import load_dotenv
+    import os
+
+    load_dotenv()
+    email = os.getenv('EMAIL')
+    password = os.getenv('PASSWORD')
+    return email, load_dotenv, os, password
+
+
+@app.cell
+def __(email, password):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.image import MIMEImage
+
+    # Email details
+    subject = "Email with Embedded Picture"
+    body = """
+    <html>
+      <body>
+        <h1>Hello!</h1>
+        <a href="iterm://newtab?command=echo%20Hello%2C%20World%21">Run 'echo Hello, World!'</a>
+        <a href="https://www.google.com">Google</a>
+        <p>This email has an embedded picture:</p>
+        <img src="cid:image1">
+      </body>
+    </html>
+    """
+
+    # Create the email
+    message = MIMEMultipart("related")
+    message["From"] = email
+    message["To"] = email
+    message["Subject"] = subject
+
+    # Add the HTML body
+    html_part = MIMEText(body, "html")
+    message.attach(html_part)
+
+    # Add the picture
+    filename = "plot.jpeg"  # Replace with your image file
+    with open(filename, "rb") as img:
+        img_part = MIMEImage(img.read())
+        img_part.add_header("Content-ID", "<image1>")  # Match the "cid" in the HTML
+        message.attach(img_part)
+
+    # Send the email
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(email, password)
+            server.sendmail(email, email, message.as_string())
+        print("Email with embedded picture sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+    return (
+        MIMEImage,
+        MIMEMultipart,
+        MIMEText,
+        body,
+        filename,
+        html_part,
+        img,
+        img_part,
+        message,
+        server,
+        smtplib,
+        subject,
+    )
 
 
 if __name__ == "__main__":

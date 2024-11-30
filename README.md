@@ -1,10 +1,11 @@
 ## TODOs:
-- [ ] Zjistit ohledne API
-- [ ] Nasetupovat posilani emails
-- [ ] Nasetupovat otevirani webapp
+- [x] Zjistit ohledne API
+- [x] Nasetupovat posilani emails
+- [x] Nasetupovat otevirani webapp
+- [x] Nasetupovat sdileni file
+- [x] Make the files private
 - [ ] Udelat designs
 - [ ] Dat si habit
-- [ ] Nasetupovat sdileni file
 - [ ] Zpracovat mood
 - [ ] Zpracovat goals
-- [ ] Dat vsecko do novych — alert.py a app.py
+- [x] Dat vsecko do novych — alert.py a app.py
