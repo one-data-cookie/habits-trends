@@ -31,6 +31,8 @@ def __(pd):
 def __(df, mo):
     sql = mo.sql(
         f"""
+        --- Data Prep
+
         with
         prep as (
             select
@@ -63,6 +65,8 @@ def __(df, mo):
 
 @app.cell
 def __(pl, plt, sql):
+    ### One metric
+
     filter_name = 'Take vitamins'
 
     filtered_sql = sql.filter(pl.col('name') == filter_name).to_pandas()
@@ -82,6 +86,8 @@ def __(pl, plt, sql):
 
 @app.cell
 def __(sql):
+    ### Common Variables
+
     # Add a list to specify metrics that should have y-axis fixed from 0 to 1
     fixed_zero_to_one_metrics = [
         "No meat", "No alcohol", "No screen",
@@ -95,6 +101,8 @@ def __(sql):
 
 @app.cell
 def __(fixed_zero_to_one_metrics, pl, plt, sql, timedelta, unique_names):
+    ### Matplotlib
+
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
@@ -185,6 +193,8 @@ def __(
     timedelta,
     unique_names,
 ):
+    ### Seaborn
+
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
@@ -266,6 +276,8 @@ def __(
     timedelta,
     unique_names,
 ):
+    ### Plotly
+
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
@@ -399,6 +411,8 @@ def __(
     sql,
     timedelta,
 ):
+    ### Altair
+
     # Filter for the last 28 days
     _sql_last_28_days = sql.filter(pl.col("day") >= (sql["day"].max() - timedelta(days=27)))
 
@@ -472,6 +486,8 @@ def __(chart_l, chart_r, mo):
 
 @app.cell
 def __():
+    ### DotEnv
+
     from dotenv import load_dotenv
     import os
 
@@ -483,6 +499,8 @@ def __():
 
 @app.cell
 def __(email, password):
+    ### Emails
+
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
@@ -542,6 +560,225 @@ def __(email, password):
         smtplib,
         subject,
     )
+
+
+@app.cell
+def __(go, make_subplots):
+    ### Tiles
+
+    # Example data
+    current_value = 1234
+    previous_value = 1200
+    trend = [1000, 1100, 1200, 1234]
+    time = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+
+    # Create a 2x1 grid with different subplot types
+    fig = make_subplots(
+        rows=2, cols=1,
+        specs=[
+            [{"type": "indicator"}],  # Big number
+            [{"type": "xy"}]          # Chart
+        ],
+        row_heights=[0.5, 0.5],  # Adjust row heights
+        vertical_spacing=0.1     # Space between rows
+    )
+
+    # Add the big number with delta in the top cell
+    fig.add_trace(
+        go.Indicator(
+            mode="number+delta",
+            value=current_value,
+            delta={
+                "reference": previous_value,
+                "relative": True,
+                "valueformat": ".1%"
+            },
+        ),
+        row=1, col=1
+    )
+
+    # Add the trendline chart in the bottom cell
+    fig.add_trace(
+        go.Scatter(
+            x=time,
+            y=trend,
+            mode='lines+markers',
+            name='Trendline',
+            line=dict(color='blue'),
+            marker=dict(size=8)
+        ),
+        row=2, col=1
+    )
+
+    # Update layout
+    fig.update_layout(
+        title={
+            'text': "<u>Metric 1</u>",
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 40}
+        },
+        height=500,
+        width=500,
+        showlegend=False,
+        xaxis2=dict(title="Time"),  # Bottom x-axis (second row)
+        yaxis2=dict(title="Value"),  # Bottom y-axis (second row)
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(showgrid=True, gridcolor='rgba(200,200,200,0.5)'),
+        yaxis=dict(showgrid=True, gridcolor='rgba(200,200,200,0.5)')
+    )
+
+    fig.show()
+    fig.write_image("fig.png")
+    return current_value, fig, previous_value, time, trend
+
+
+@app.cell
+def __(go):
+    ### Tiles to HTML
+
+    # Create individual figures
+    fig1 = go.Figure(data=go.Scatter(x=[1, 2, 3], y=[4, 5, 6]))
+    fig2 = go.Figure(data=go.Bar(x=[1, 2, 3], y=[4, 5, 6]))
+    fig3 = go.Figure(data=go.Pie(values=[10, 20, 30]))
+    fig4 = go.Figure(data=go.Indicator(mode="number", value=1234))
+
+    # Save each figure as a PNG image
+    fig1.write_image("fig1.png")
+    fig2.write_image("fig2.png")
+    fig3.write_image("fig3.png")
+    fig4.write_image("fig4.png")
+
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        .grid-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr; /* 2 columns */
+          gap: 10px;
+        }
+        .grid-item img {
+          width: 100%; /* Make images responsive */
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          padding: 5px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="grid-container">
+        <div class="grid-item"><img src="fig1.png" alt="Figure 1"></div>
+        <div class="grid-item"><img src="fig2.png" alt="Figure 2"></div>
+        <div class="grid-item"><img src="fig3.png" alt="Figure 3"></div>
+        <div class="grid-item"><img src="fig4.png" alt="Figure 4"></div>
+      </div>
+    </body>
+    </html>
+    """
+
+    # Save the HTML file
+    with open("combined.html", "w") as file:
+        file.write(html_content)
+    return fig1, fig2, fig3, fig4, file, html_content
+
+
+@app.cell
+def __(plt):
+    ### Wordcloud
+
+    from wordcloud import WordCloud
+    import random
+
+    # Generate random words with random frequencies
+    words = {f"Word{i}": random.randint(1, 6) for i in range(1, 10)}
+    print(words)
+
+    # Create the word cloud with padding to avoid overlap
+    wordcloud = WordCloud(
+        width=800, 
+        height=400, 
+        background_color='white', 
+        colormap='viridis',
+        contour_width=1,
+        contour_color='black',
+        prefer_horizontal=1.0,
+        scale=10,
+    ).generate_from_frequencies(words)
+
+    # Display the word cloud
+    plt.figure(figsize=(12, 6))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')  # Turn off the axis
+    plt.title("Word Cloud", fontsize=20)
+    plt.show()
+    return WordCloud, random, wordcloud, words
+
+
+@app.cell
+def __(plt):
+    ### Heatmap
+
+    import numpy as np
+    from matplotlib.colors import Normalize
+    from matplotlib.colors import LinearSegmentedColormap
+    import matplotlib.cm as cm
+
+    # Example data: values over 7 days for 4 metrics
+    _data = np.array([
+        [1, 0, 0, 1, 0, 1, 0],  
+        [2000, 2500, 1000, 1700, 2500, 1000, 1800],
+        [5, 10, 15, 5, 10, 15, 5],
+        [300, 100, 200, 400, 500, 250, 350]
+    ])
+
+    # Metric labels
+    _metrics = ["Metric 1", "Metric 2", "Metric 3", "Metric 4"]
+
+    # Adjust the transparency (alpha) of the colormap
+    _base_cmap = plt.colormaps.get_cmap('RdYlGn')
+    _colors = _base_cmap(np.linspace(0, 1, 256))  # Extract original colours
+    _colors[:, -1] = 0.5  # Set alpha transparency to 50%
+    _cmap = LinearSegmentedColormap.from_list("PastelRdYlGn", _colors)
+
+    # Create the heatmap
+    _fig, _ax = plt.subplots(figsize=(10, 6))
+
+    # Normalize each row independently
+    for _i, row in enumerate(_data):
+        _min, _max = np.min(row), np.max(row)
+        _mean = np.mean(row)
+        _norm = Normalize(vmin=_min, vmax=_max)
+        for _j, value in enumerate(row):
+            # Normalise value and get colour
+            color = _cmap(_norm(value))
+            _ax.add_patch(plt.Rectangle((_j, _i), 1, 1, color=color))
+            _ax.text(_j + 0.5, _i + 0.5, f"{value:.1f}", ha="center", va="center", color="black")
+
+    # Set axis labels and ticks
+    _ax.set_xticks(np.arange(_data.shape[1]) + 0.5)
+    _ax.set_yticks(np.arange(_data.shape[0]) + 0.5)
+    _ax.set_xticklabels(['M', 'T', 'W', 'T', 'F', 'S', 'S'])
+    _ax.set_yticklabels(_metrics)
+    _ax.set_xlim(0, _data.shape[1])
+    _ax.set_ylim(0, _data.shape[0])
+    _ax.invert_yaxis()
+
+    # Add grid lines
+    _ax.set_xticks(np.arange(_data.shape[1]), minor=True)
+    _ax.set_yticks(np.arange(_data.shape[0]), minor=True)
+    _ax.grid(which="minor", color="black", linestyle='-', linewidth=0.5)
+    _ax.tick_params(which="minor", size=0)
+
+    plt.show()
+    return LinearSegmentedColormap, Normalize, cm, color, np, row, value
+
+
+@app.cell
+def __():
+    return
 
 
 if __name__ == "__main__":

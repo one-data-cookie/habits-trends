@@ -4,8 +4,11 @@
 - [x] Nasetupovat otevirani webapp
 - [x] Nasetupovat sdileni file
 - [x] Make the files private
-- [ ] Udelat designs
-- [ ] Dat si habit
-- [ ] Zpracovat mood
-- [ ] Zpracovat goals
 - [x] Dat vsecko do novych — alert.py a app.py
+- [x] Udelat designs
+- [x] Zpracovat goals
+- [x] Prejmenovat habits
+- [ ] Pripravit novy SQL
+- [ ] Dat vsechno dohromady pro alert.py
+- [ ] Predelat do app.py
+- [ ] Dat si habit a vyfiltrovat ho
