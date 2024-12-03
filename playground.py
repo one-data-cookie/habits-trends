@@ -64,10 +64,32 @@ def __(df, mo):
 
 
 @app.cell
-def __(pl, plt, sql):
+def __(sql):
+    ### Common Variables
+
+    # Add a list to specify metrics that should have y-axis fixed from 0 to 1
+    fixed_zero_to_one_metrics = [
+        "No meat", "No alcohol", "No screen",
+        "Read some", "Take vitamins", "Exercise some", "Walk Falco"
+    ]
+
+    # Get unique values of the 'name' column
+    unique_names = sorted(sql["name"].unique())
+    return fixed_zero_to_one_metrics, unique_names
+
+
+@app.cell
+def __(mo, unique_names):
+    first_dropdown = mo.ui.dropdown(unique_names, value='Exercise some')
+    first_dropdown
+    return (first_dropdown,)
+
+
+@app.cell
+def __(first_dropdown, pl, plt, sql):
     ### One metric
 
-    filter_name = 'Take vitamins'
+    filter_name = first_dropdown.value
 
     filtered_sql = sql.filter(pl.col('name') == filter_name).to_pandas()
     plt.plot(filtered_sql['day'], filtered_sql['moving_avg'])
@@ -82,21 +104,6 @@ def __(pl, plt, sql):
     plt.gca()
     plt.show()
     return filter_name, filtered_sql
-
-
-@app.cell
-def __(sql):
-    ### Common Variables
-
-    # Add a list to specify metrics that should have y-axis fixed from 0 to 1
-    fixed_zero_to_one_metrics = [
-        "No meat", "No alcohol", "No screen",
-        "Read some", "Take vitamins", "Exercise some", "Walk Falco"
-    ]
-
-    # Get unique values of the 'name' column
-    unique_names = sorted(sql["name"].unique())
-    return fixed_zero_to_one_metrics, unique_names
 
 
 @app.cell
