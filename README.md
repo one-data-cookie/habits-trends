@@ -8,7 +8,7 @@
 - [x] Udelat designs
 - [x] Zpracovat goals
 - [x] Prejmenovat habits
-- [ ] Pripravit novy SQL
+- [x] Pripravit novy SQL
 - [ ] Dat vsechno dohromady pro alert.py
 - [ ] Predelat do app.py
 - [ ] Dat si habit a vyfiltrovat ho
