@@ -9,6 +9,17 @@
 - [x] Zpracovat goals
 - [x] Prejmenovat habits
 - [x] Pripravit novy SQL
-- [ ] Dat vsechno dohromady pro alert.py
-- [ ] Predelat do app.py
-- [ ] Dat si habit a vyfiltrovat ho
+- [x] Fixnout alert.py
+  - [x] 8w, trendline
+  - [x] dynamic filter of lw
+  - [x] swap arrows
+  - [x] clean up output, not just png
+- [x] Dodelat alert.py
+  - [x] mood wordclouds
+  - [x] html
+  - [x] email sending
+  - [x] clean up
+- [ ] Set up other things
+  - [ ] Automatic run through plist
+  - [ ] Create habit and filter it out
+- [ ] Create proper app.py

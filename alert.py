@@ -8,16 +8,48 @@ app = marimo.App(width="medium")
 def __():
     ### Import what's needed
 
+    import matplotlib.pyplot as plt
     import marimo as mo
+    import numpy as np
     import os
     import pandas as pd
     import plotly.graph_objects as go
     import polars as pl
+    import smtplib
 
+    from collections import Counter
+    from datetime import datetime, timedelta
+    from dotenv import load_dotenv
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.image import MIMEImage
+    from matplotlib.colors import Normalize, LinearSegmentedColormap
     from plotly.subplots import make_subplots
+    from wordcloud import WordCloud
 
     OUTPUT_FOLDER = "output"
-    return OUTPUT_FOLDER, go, make_subplots, mo, os, pd, pl
+    return (
+        Counter,
+        LinearSegmentedColormap,
+        MIMEImage,
+        MIMEMultipart,
+        MIMEText,
+        Normalize,
+        OUTPUT_FOLDER,
+        WordCloud,
+        datetime,
+        go,
+        load_dotenv,
+        make_subplots,
+        mo,
+        np,
+        os,
+        pd,
+        pl,
+        plt,
+        smtplib,
+        timedelta,
+    )
 
 
 @app.cell
@@ -47,15 +79,33 @@ def __(df, pd):
     # Rewrite some columns
     df['Date'] = pd.to_datetime(df['Date'], format='%d %b %Y').dt.date
     df['Quantity'] = df['Quantity'].map(mood_map).combine_first(df['Quantity'])
-    df
-    return (mood_map,)
+    df_clean = df
+    df_clean
+    return df_clean, mood_map
 
 
 @app.cell
-def __(df, mo):
+def __(df_clean, mo):
+    df_moods = mo.sql(
+        f"""
+        -- Transform mood labels
+
+        select
+            Date as date,
+            "Mood Labels" as mood_labels,
+            "Mood Associations" as mood_assocs
+        from df_clean
+        where Name = 'Track mood'
+        """
+    )
+    return (df_moods,)
+
+
+@app.cell
+def __(df_clean, mo):
     df_daily = mo.sql(
         f"""
-        -- Clean up df
+        -- Clean up df_clean even more
 
         select
             Date as date,
@@ -64,11 +114,15 @@ def __(df, mo):
             case 
                 when Name in ('Track sleep', 'Track screen')
                 then Quantity::float / 60
+
+                when Name = 'Track steps'
+                then Quantity::float / 1000
+        
                 else Quantity::float
             end as quantity
-        from df
+        from df_clean
         where Name not in ('Mark habits')
-        and Date < date '2024-12-02'
+        and Date < date_trunc('week', current_date)
         """
     )
     return (df_daily,)
@@ -93,22 +147,72 @@ def __(df_daily, mo):
 
 
 @app.cell
-def __(df_weekly):
-    print(df_weekly)
-    return
+def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
+    ### Create mood wordlouds
+
+    # Filter the df
+    df_moods_lw = df_filter_lw(df_moods)
+
+    # Create word cloud configurations
+    _configs = [
+        {
+            "data_column": "mood_labels",
+            "title": "Mood Labels",
+            "colormap": 'viridis',
+            "subplot_pos": 1
+        },
+        {
+            "data_column": "mood_assocs",
+            "title": "Mood Associations", 
+            "colormap": 'cividis',
+            "subplot_pos": 2
+        }
+    ]
+
+    # Display both word clouds
+    plt.figure(figsize=(16, 12))
+
+    for _config in _configs:
+        # Split and count words
+        words = df_moods_lw[_config["data_column"]].str.split(", ").explode().tolist()
+        word_counts = Counter(words)
+
+        # Create word cloud
+        wordcloud = WordCloud(
+            width=800,
+            height=400,
+            background_color='white',
+            colormap=_config["colormap"],
+            contour_width=1,
+            contour_color='black',
+            prefer_horizontal=1.0,
+            scale=10,
+            margin=10
+        ).generate_from_frequencies(word_counts)
+
+        # Plot
+        plt.subplot(1, 2, _config["subplot_pos"])
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis('off')
+
+    # Save images to OUTPUT_FOLDER
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+    _filepath = os.path.join(OUTPUT_FOLDER, "wordclouds.png")
+    plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    return df_moods_lw, word_counts, wordcloud, words
 
 
 @app.cell
-def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
+def __(OUTPUT_FOLDER, config, df_weekly, go, make_subplots, os, pl):
     ### Build a tiles
     habits = sorted(df_weekly["name"].unique(), reverse=True)
 
     for _habit in habits:
         # Prep data
         df_filtered = df_weekly.filter(pl.col('name') == _habit)
-        trend = df_filtered['quantity_avg'].to_list()[-6:]
-        time = df_filtered['week'].to_list()[-6:]
-        
+        trend = df_filtered['quantity_avg'].to_list()[-8:]
+        time = df_filtered['week'].to_list()[-8:]
+
         # Create a 2x1 grid with different subplot types
         fig = make_subplots(
             rows=2, cols=1,
@@ -121,7 +225,7 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
         )
 
         # Create a configuration dictionary and assign
-        opts = {
+        _opts = {
             "Track": {
                 "format": ".1f",
                 "delta_relative": True,
@@ -133,7 +237,7 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
                 "y_range": [-0.1, 1.1]
             }
         }
-        config = opts.get(_habit.split()[0], opts["Default"])
+        _configs = _opts.get(_habit.split()[0], _opts["Default"])
 
         # Add the big number with delta in the top cell
         fig.add_trace(
@@ -141,18 +245,37 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
                 mode="number+delta",
                 value=trend[-1],
                 number={
-                    "valueformat": config["format"]
+                    "valueformat": _configs["format"]
                 },
                 delta={
                     "reference": trend[-2],
-                    "relative": config["delta_relative"],
-                    "valueformat": ".0%"
+                    "relative": _configs["delta_relative"],
+                    "valueformat": ".0%",
+                    "increasing":
+                        {"color": "red"} if _habit.startswith("No") or _habit.endswith("screen")
+                        else None,
+                    "decreasing":
+                        {"color": "green"} if _habit.startswith("No") or _habit.endswith("screen")
+                        else None
                 },
             ),
             row=1, col=1
         )
-        
-        # Add the trendline chart in the bottom cell
+
+        # Add the average line in the bottom cell first
+        avg_value = sum(trend) / len(trend)
+        fig.add_trace(
+            go.Scatter(
+                x=time,
+                y=[avg_value] * len(time),  # Repeat avg for each x
+                mode='lines',
+                name='Average',
+                line=dict(color='red', dash='dash')
+            ),
+            row=2, col=1
+        )
+
+        # Add the line chart in the bottom cell
         fig.add_trace(
             go.Scatter(
                 x=time,
@@ -164,7 +287,7 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
             ),
             row=2, col=1
         )
-        
+
         # Update layout
         fig.update_layout(
             title={
@@ -200,13 +323,124 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
         os.makedirs(OUTPUT_FOLDER, exist_ok=True)
         _filepath = os.path.join(OUTPUT_FOLDER, f"{_habit}.png")
         fig.write_image(_filepath)
-    return config, df_filtered, fig, habits, opts, time, trend
+    return avg_value, df_filtered, fig, habits, time, trend
+
+
+@app.cell
+def __(datetime, pl, timedelta):
+    ### Create function for returning just last week
+
+    def df_filter_lw(df):
+        # Prep dates
+        today = datetime.now()
+        lw_end = datetime.combine(today - timedelta(days=today.weekday() + 1), datetime.max.time())
+        lw_start = datetime.combine(lw_end - timedelta(days=6), datetime.min.time())
+        
+        # Filter and transform the DataFrame
+        df_lw = df.filter(
+            (pl.col('date') >= lw_start) & 
+            (pl.col('date') <= lw_end)
+        )
+        df_lw = df_lw.to_pandas()
+        return df_lw
+    return (df_filter_lw,)
+
+
+@app.cell
+def __(
+    LinearSegmentedColormap,
+    Normalize,
+    OUTPUT_FOLDER,
+    df_daily,
+    df_filter_lw,
+    np,
+    os,
+    plt,
+):
+    ### Create heatmap
+
+    # Filter the df
+    df_daily_lw = df_filter_lw(df_daily)
+
+    # Pivot the data to create a matrix of `quantity` values with `day` as columns and `name` as rows
+    heatmap_data = df_daily_lw.pivot_table(index='name', columns='day', values='quantity', aggfunc='mean').fillna(0)
+
+    # Sort days in week order
+    day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    heatmap_data = heatmap_data.reindex(columns=day_order)
+
+    # Sort metrics in decreasing alphabetical order
+    heatmap_data = heatmap_data.sort_index(ascending=False)
+
+    # Prep the data
+    metrics = heatmap_data.index.tolist()
+    days = heatmap_data.columns.tolist()
+    data_matrix = heatmap_data.to_numpy()
+
+    # Adjust the transparency (alpha) of the colormap
+    base_cmap = plt.colormaps.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))  # Extract original colours
+    colors[:, -1] = 0.5  # Set alpha transparency to 50%
+    cmap = LinearSegmentedColormap.from_list("PastelRdYlGn", colors)
+
+    # Create the heatmap
+    _fig, _ax = plt.subplots(figsize=(12, 8))
+
+    # Normalize the data relative to each row
+    for i, row in enumerate(data_matrix):
+        vmin, vmax = np.min(row), np.max(row)
+        norm = Normalize(vmin=vmin, vmax=vmax)
+        
+        for j, value in enumerate(row):
+            color = cmap(norm(value)) if vmax > 0 else (1, 1, 1, 0.5)  # White for rows with all zeros
+            _ax.add_patch(plt.Rectangle((j, i), 1, 1, color=color))
+            _ax.text(j + 0.5, i + 0.5, f"{value:.1f}", ha="center", va="center", color="black")
+
+    # Configure axis labels and ticks
+    _ax.set_xticks(np.arange(len(days)) + 0.5)
+    _ax.set_yticks(np.arange(len(metrics)) + 0.5)
+    _ax.set_xticklabels(days)
+    _ax.set_yticklabels(metrics)
+    _ax.set_xlim(0, len(days))
+    _ax.set_ylim(0, len(metrics))
+    _ax.invert_yaxis()
+
+    # Add grid lines
+    _ax.set_xticks(np.arange(len(days)), minor=True)
+    _ax.set_yticks(np.arange(len(metrics)), minor=True)
+    _ax.grid(which="minor", color="black", linestyle='-', linewidth=0.5)
+    _ax.tick_params(which="minor", size=0)
+
+    # Save images to OUTPUT_FOLDER
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+    _filepath = os.path.join(OUTPUT_FOLDER, "heatmap.png")
+    plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    return (
+        base_cmap,
+        cmap,
+        color,
+        colors,
+        data_matrix,
+        day_order,
+        days,
+        df_daily_lw,
+        heatmap_data,
+        i,
+        j,
+        metrics,
+        norm,
+        row,
+        value,
+        vmax,
+        vmin,
+    )
 
 
 @app.cell
 def __(OUTPUT_FOLDER, habits, os):
-    ### Put tiles into HTML
+    ### Stitch content together into html
 
+    # Base HTML content
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -225,48 +459,173 @@ def __(OUTPUT_FOLDER, habits, os):
         }
         .grid-item {
           text-align: center;
-          font-family: Arial, sans-serif;
+          font-family: "Helvetica", sans-serif;
           font-size: 14px;
+        }
+        h1 {
+          text-align: center;
+          font-family: "Helvetica", sans-serif;
+          font-size: 24px;
+        }
+        h2 {
+          text-align: center;
+          font-family: "Helvetica", sans-serif;
+          font-size: 20px;
         }
       </style>
     </head>
     <body>
-      <div class="grid-container">
+    """
+
+    # Add wordclouds section
+    html_content += f"""
+      <h2>Mood Wordclouds</h2>
+      <div style="text-align: center;">
+        <img src="wordclouds.png" alt="Wordclouds" style="max-width: 800px; padding: 5px;">
+      </div>
+      <br>
+    """
+
+    # Add tiles section
+    html_content += """
+      <h2>Habit Tiles</h2>
+      <table style="width: auto; max-width: 800px; margin: auto; border-collapse: collapse; text-align: center;">
+        <tr>
     """
 
     # Add each habit's tile to the HTML
-    for _habit in habits:
+    for index, _habit in enumerate(habits):
         html_content += f"""
-        <div class="grid-item">
-          <img src="{_habit}.png" alt="{_habit}">
-        </div>
+          <td>
+            <img src="{_habit}.png" alt="{_habit}" style="max-width: 200px; border: 1px solid #ddd; border-radius: 1px;">
+          </td>
         """
+        # Close the row every 4 items
+        if (index + 1) % 4 == 0:
+            html_content += "</tr><tr>"
 
-    # Close the grid and HTML
+    # Close the last row and table
     html_content += """
+        </tr>
+      </table>
+      <br>
+    """
+
+    # Add heatmap section
+    html_content += f"""
+      <h2>Habit Heatmap</h2>
+      <div style="text-align: center;">
+        <img src="heatmap.png" alt="Heatmap" style="max-width: 800px; padding: 5px;">
       </div>
+    """
+
+    # Close the HTML
+    html_content += """
     </body>
     </html>
     """
 
-    # Save the HTML file to OUTPUT_FOLDER
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+    # Save the HTML file in the output folder
     html_file = os.path.join(OUTPUT_FOLDER, "dashboard.html")
     with open(html_file, "w") as file:
         file.write(html_content)
-    return file, html_content, html_file
+
+    print(f"HTML file saved to: {html_file}")
+    return file, html_content, html_file, index
 
 
 @app.cell
-def __():
-    # Delete png files from OUTPUT_FOLDER
-    # for _habit in habits:
-    #     _filepath = os.path.join(OUTPUT_FOLDER, f"{_habit}.png")
-    #     if os.path.exists(_filepath):
-    #         os.remove(_filepath)
-    #         print(f"Deleted: {_filepath}")
-    #     else:
-    #         print(f"File not found: {_filepath}")
+def __(
+    MIMEImage,
+    MIMEMultipart,
+    MIMEText,
+    OUTPUT_FOLDER,
+    habits,
+    html_content,
+    load_dotenv,
+    os,
+    smtplib,
+):
+    ### Send the email
+
+    # Load DotEnv
+    load_dotenv()
+    email = os.getenv('EMAIL')
+    password = os.getenv('PASSWORD')
+
+    # Email details
+    subject = "How was last week?"
+
+    # Create the email
+    message = MIMEMultipart("alternative")
+    message["From"] = email
+    message["To"] = email
+    message["Subject"] = subject
+
+    # Attach the HTML content
+    html_part = MIMEText(html_content, "html")
+    message.attach(html_part)
+
+    # Attach images used in the HTML
+    image_files = [
+        f"{OUTPUT_FOLDER}/wordclouds.png",
+        f"{OUTPUT_FOLDER}/heatmap.png",
+    ] + [f"{OUTPUT_FOLDER}/{habit}.png" for habit in habits]  # Add habit tiles
+
+    # Set up "cid"
+    for _idx, image_path in enumerate(image_files):
+        with open(image_path, "rb") as img:
+            img_part = MIMEImage(img.read())
+            img_part.add_header("Content-ID", f"<image{_idx+1}>")  # Match the "cid" in HTML
+            img_part.add_header("Content-Disposition", "inline")  # Explicitly set as inline
+            message.attach(img_part)
+
+    # Ensure HTML content references the correct "cid"
+    html_content_cid = html_content
+    html_content_cid = html_content.replace(f"wordclouds.png", "cid:image1")
+    html_content_cid = html_content_cid.replace(f"heatmap.png", "cid:image2")
+    for _idx, habit in enumerate(habits):
+        html_content_cid = html_content_cid.replace(f"{habit}.png", f"cid:image{_idx+3}")
+
+    # Update the HTML part with the modified content
+    html_part.set_payload(html_content_cid)
+
+    # Send the email
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(email, password)
+            server.sendmail(email, email, message.as_string())
+        print("Email with dashboard sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+    return (
+        email,
+        habit,
+        html_content_cid,
+        html_part,
+        image_files,
+        image_path,
+        img,
+        img_part,
+        message,
+        password,
+        server,
+        subject,
+    )
+
+
+@app.cell
+def __(OUTPUT_FOLDER, os):
+    ### Clean up all files in OUTPUT_FOLDER
+    if os.path.exists(OUTPUT_FOLDER):
+        for _filename in os.listdir(OUTPUT_FOLDER):
+            _filepath = os.path.join(OUTPUT_FOLDER, _filename)
+            if os.path.isfile(_filepath):
+                os.remove(_filepath)
+                print(f"Deleted: {_filepath}")
+    else:
+        print(f"Folder not found: {OUTPUT_FOLDER}")
     return
 
 
