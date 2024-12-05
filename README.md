@@ -19,7 +19,8 @@
   - [x] html
   - [x] email sending
   - [x] clean up
-- [ ] Set up other things
-  - [ ] Automatic run through plist
-  - [ ] Create habit and filter it out
+- [x] Schedule alert.py
+  - [x] Automatic run through plist
+  - [x] Create habit and filter it out
 - [ ] Create proper app.py
+- [ ] Open-source this

@@ -27,7 +27,8 @@ def __():
     from plotly.subplots import make_subplots
     from wordcloud import WordCloud
 
-    OUTPUT_FOLDER = "output"
+    load_dotenv()
+    OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER')
     return (
         Counter,
         LinearSegmentedColormap,
@@ -53,10 +54,10 @@ def __():
 
 
 @app.cell
-def __(pd):
+def __(os, pd):
     ### Load data
 
-    df = pd.read_csv('AwesomeHabits.csv')
+    df = pd.read_csv(os.getenv('HABITS_PATH'))
     df
     return (df,)
 
@@ -121,7 +122,7 @@ def __(df_clean, mo):
                 else Quantity::float
             end as quantity
         from df_clean
-        where Name not in ('Mark habits')
+        where Name not in ('Mark habits', 'Export habits')
         and Date < date_trunc('week', current_date)
         """
     )
@@ -199,6 +200,7 @@ def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     _filepath = os.path.join(OUTPUT_FOLDER, "wordclouds.png")
     plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    print(f"Wordclouds saved to: {_filepath}!")
     return df_moods_lw, word_counts, wordcloud, words
 
 
@@ -323,6 +325,7 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
         os.makedirs(OUTPUT_FOLDER, exist_ok=True)
         _filepath = os.path.join(OUTPUT_FOLDER, f"{_habit}.png")
         fig.write_image(_filepath)
+        print(f"Habit tile saved to: {_filepath}!")
     return avg_value, df_filtered, fig, habits, time, trend
 
 
@@ -415,6 +418,7 @@ def __(
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     _filepath = os.path.join(OUTPUT_FOLDER, "heatmap.png")
     plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    print(f"Heatmap saved to: {_filepath}!")
     return (
         base_cmap,
         cmap,
@@ -542,18 +546,13 @@ def __(
     OUTPUT_FOLDER,
     habits,
     html_content,
-    load_dotenv,
     os,
     smtplib,
 ):
     ### Send the email
 
-    # Load DotEnv
-    load_dotenv()
-    email = os.getenv('EMAIL')
-    password = os.getenv('PASSWORD')
-
     # Email details
+    email = os.getenv('EMAIL')
     subject = "How was last week?"
 
     # Create the email
@@ -594,7 +593,7 @@ def __(
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            server.login(email, password)
+            server.login(email, os.getenv('PASSWORD'))
             server.sendmail(email, email, message.as_string())
         print("Email with dashboard sent successfully!")
     except Exception as e:
@@ -619,15 +618,9 @@ def __(
         img,
         img_part,
         message,
-        password,
         server,
         subject,
     )
-
-
-@app.cell
-def __():
-    return
 
 
 if __name__ == "__main__":
