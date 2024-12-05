@@ -8,6 +8,7 @@ raycast.sh
 
 # Local files
 .DS_Store
+.alert.*
 
 # Python-generated files
 __pycache__/
