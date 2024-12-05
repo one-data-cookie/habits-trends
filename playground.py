@@ -44,7 +44,7 @@ def __(df, mo):
                     else Quantity::float 
                 end as quantity
             from df
-            where Name not in ('Daily mood', 'Mark habits')
+            where Name not in ('Track mood', 'Mark habits')
         )
 
         select
@@ -70,7 +70,7 @@ def __(sql):
     # Add a list to specify metrics that should have y-axis fixed from 0 to 1
     fixed_zero_to_one_metrics = [
         "No meat", "No alcohol", "No screen",
-        "Read some", "Take vitamins", "Exercise some", "Walk Falco"
+        "Some reading", "Some vitamins", "Some exercise", "Some Falco"
     ]
 
     # Get unique values of the 'name' column
@@ -80,7 +80,7 @@ def __(sql):
 
 @app.cell
 def __(mo, unique_names):
-    first_dropdown = mo.ui.dropdown(unique_names, value='Exercise some')
+    first_dropdown = mo.ui.dropdown(unique_names, value='Some exercise')
     first_dropdown
     return (first_dropdown,)
 
@@ -408,6 +408,13 @@ def __(
 
 
 @app.cell
+def __(mo, unique_names):
+    dropdown = mo.ui.dropdown(unique_names, value='Some exercise')
+    dropdown
+    return (dropdown,)
+
+
+@app.cell
 def __(
     alt,
     dropdown,
@@ -475,13 +482,6 @@ def __(
     chart_l = mo.ui.altair_chart(moving_avg_chart + dots + mean_line)
     chart_r = mo.ui.altair_chart(bar_chart)
     return bar_chart, chart_l, chart_r, dots, mean_line, moving_avg_chart
-
-
-@app.cell
-def __(mo, unique_names):
-    dropdown = mo.ui.dropdown(unique_names, value='Exercise some')
-    dropdown
-    return (dropdown,)
 
 
 @app.cell
