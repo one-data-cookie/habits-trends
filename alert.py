@@ -29,6 +29,10 @@ def __():
 
     load_dotenv()
     OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER')
+    START_TS = datetime.now()
+
+    # Also print the time
+    print(f"Started the script by importing at {START_TS}!")
     return (
         Counter,
         LinearSegmentedColormap,
@@ -37,6 +41,7 @@ def __():
         MIMEText,
         Normalize,
         OUTPUT_FOLDER,
+        START_TS,
         WordCloud,
         datetime,
         go,
@@ -330,13 +335,12 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
 
 
 @app.cell
-def __(datetime, pl, timedelta):
+def __(START_TS, datetime, pl, timedelta):
     ### Create function for returning just last week
 
     def df_filter_lw(df):
         # Prep dates
-        today = datetime.now()
-        lw_end = datetime.combine(today - timedelta(days=today.weekday() + 1), datetime.max.time())
+        lw_end = datetime.combine(START_TS - timedelta(days=START_TS.weekday() + 1), datetime.max.time())
         lw_start = datetime.combine(lw_end - timedelta(days=6), datetime.min.time())
 
         # Filter and transform the DataFrame
