@@ -117,7 +117,7 @@ def __(df_clean, mo):
 
                 when Name = 'Track steps'
                 then Quantity::float / 1000
-        
+
                 else Quantity::float
             end as quantity
         from df_clean
@@ -203,7 +203,7 @@ def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
 
 
 @app.cell
-def __(OUTPUT_FOLDER, config, df_weekly, go, make_subplots, os, pl):
+def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
     ### Build a tiles
     habits = sorted(df_weekly["name"].unique(), reverse=True)
 
@@ -314,8 +314,8 @@ def __(OUTPUT_FOLDER, config, df_weekly, go, make_subplots, os, pl):
                 showgrid=True,
                 automargin=True,
                 gridcolor='rgba(200,200,200,0.5)',
-                range=config["y_range"],
-                tickformat=config["format"]
+                range=_configs["y_range"],
+                tickformat=_configs["format"]
             )
         )
 
@@ -335,7 +335,7 @@ def __(datetime, pl, timedelta):
         today = datetime.now()
         lw_end = datetime.combine(today - timedelta(days=today.weekday() + 1), datetime.max.time())
         lw_start = datetime.combine(lw_end - timedelta(days=6), datetime.min.time())
-        
+
         # Filter and transform the DataFrame
         df_lw = df.filter(
             (pl.col('date') >= lw_start) & 
@@ -390,7 +390,7 @@ def __(
     for i, row in enumerate(data_matrix):
         vmin, vmax = np.min(row), np.max(row)
         norm = Normalize(vmin=vmin, vmax=vmax)
-        
+
         for j, value in enumerate(row):
             color = cmap(norm(value)) if vmax > 0 else (1, 1, 1, 0.5)  # White for rows with all zeros
             _ax.add_patch(plt.Rectangle((j, i), 1, 1, color=color))
@@ -599,6 +599,16 @@ def __(
         print("Email with dashboard sent successfully!")
     except Exception as e:
         print(f"Failed to send email: {e}")
+
+    # Clean up all files in OUTPUT_FOLDER after the attempt to send
+    if os.path.exists(OUTPUT_FOLDER):
+        for _filename in os.listdir(OUTPUT_FOLDER):
+            _filepath = os.path.join(OUTPUT_FOLDER, _filename)
+            if os.path.isfile(_filepath):
+                os.remove(_filepath)
+        print(f"Deleted all files from {OUTPUT_FOLDER}!")
+    else:
+        print(f"Folder not found: {OUTPUT_FOLDER}")
     return (
         email,
         habit,
@@ -613,20 +623,6 @@ def __(
         server,
         subject,
     )
-
-
-@app.cell
-def __(OUTPUT_FOLDER, os):
-    ### Clean up all files in OUTPUT_FOLDER
-    if os.path.exists(OUTPUT_FOLDER):
-        for _filename in os.listdir(OUTPUT_FOLDER):
-            _filepath = os.path.join(OUTPUT_FOLDER, _filename)
-            if os.path.isfile(_filepath):
-                os.remove(_filepath)
-                print(f"Deleted: {_filepath}")
-    else:
-        print(f"Folder not found: {OUTPUT_FOLDER}")
-    return
 
 
 @app.cell
