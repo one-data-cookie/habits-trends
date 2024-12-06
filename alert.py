@@ -399,7 +399,11 @@ def __(
         norm = Normalize(vmin=vmin, vmax=vmax)
 
         for j, value in enumerate(row):
-            color = cmap(norm(value)) if vmax > 0 else (1, 1, 1, 0.5)  # White for rows with all zeros
+            # Invert colour for some metrics
+            value_adj = vmax + vmin - value \
+              if metrics[i].startswith("No") or metrics[i].endswith("screen") \
+              else value
+            color = cmap(norm(value_adj)) if vmax > 0 else (1, 1, 1, 0.5)
             _ax.add_patch(plt.Rectangle((j, i), 1, 1, color=color))
             _ax.text(j + 0.5, i + 0.5, f"{value:.1f}", ha="center", va="center", color="black")
 
