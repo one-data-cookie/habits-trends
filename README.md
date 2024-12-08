@@ -23,4 +23,10 @@
   - [x] Automatic run through plist
   - [x] Create habit and filter it out
 - [ ] Create proper app.py
+  - [ ] Fix moving_avg vs overall_avg
+  - [ ] Fix clicking
+  - [ ] Improve visual
+  - [ ] Build layout
 - [ ] Open-source this
+  - [ ] Unify the first few cells into one code
+  - [ ] Check for private data
