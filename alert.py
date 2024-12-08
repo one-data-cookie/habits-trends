@@ -127,8 +127,9 @@ def __(df_clean, mo):
                 else Quantity::float
             end as quantity
         from df_clean
-        where Name not in ('Mark habits', 'Export habits')
-        and Date < date_trunc('week', current_date)
+        where
+            Name not in ('Mark habits', 'Export habits')
+            and Date < date_trunc('week', current_date)
         """
     )
     return (df_daily,)
