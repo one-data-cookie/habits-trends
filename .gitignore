@@ -1,14 +1,9 @@
-# Private files
-output/
-.env
-AwesomeHabits.csv
-plot.jpeg
-plot.png
-raycast.sh
-
 # Local files
 .DS_Store
 .alert.*
+output/
+AwesomeHabits.csv
+raycast.sh
 
 # Python-generated files
 __pycache__/
@@ -19,4 +14,5 @@ wheels/
 *.egg-info
 
 # Virtual environments
+.env
 .venv/
