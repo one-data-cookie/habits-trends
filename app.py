@@ -137,7 +137,7 @@ def __(alt, dd_habits, dd_weeks, df_daily_avg, mo):
     # Moving Average Line Chart
     moving_chart = (
         alt.Chart(_df_daily_avg)
-        .mark_line(color="green")
+        .mark_line(color="#067764")
         .encode(
             x="date:T",
             y=alt.Y(
@@ -165,7 +165,7 @@ def __(alt, dd_habits, dd_weeks, df_daily_avg, mo):
     # Add dots to easily locate data points
     moving_dots = (
         alt.Chart(_df_daily_avg)
-        .mark_point(filled=True, size=25, color="green")
+        .mark_point(filled=True, size=25, color="#067764")
         .encode(x="date:T", y="moving_avg:Q")
     )
 
@@ -180,7 +180,7 @@ def __(alt, dd_habits, dd_weeks, df_daily_avg, mo):
     # Daily Quantity Bar Chart (Last 28 Days)
     daily_chart = (
         alt.Chart(_df_daily_cut)
-        .mark_bar(color="skyblue")
+        .mark_bar(color="#067764")
         .encode(
             x="date:T",
             y=alt.Y(
@@ -222,7 +222,7 @@ def __(alt, dd_habits, dd_weeks, df_daily_avg, mo):
 
 @app.cell
 def __(dd_habits, dd_weeks, mo):
-    mo.md(f"""# **Stats for {dd_habits.value} | {dd_weeks.value} weeks**""")
+    mo.md(f"""# <u>**Stats for {dd_habits.value} | {dd_weeks.value} weeks**</u>""")
     return
 
 
