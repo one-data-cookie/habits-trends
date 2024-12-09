@@ -28,7 +28,7 @@
   - [x] Fix clicking
   - [x] Improve visual
   - [x] Build layout
-- [ ] Clean up
-  - [ ] Unify the first few cells into one code
+- [x] Clean up
+  - [x] Unify the first few cells
   - [x] Check for private data
   - [x] Unify "s and 's

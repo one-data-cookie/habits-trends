@@ -92,23 +92,6 @@ def __(df, pd):
 
 @app.cell
 def __(df_clean, mo):
-    df_moods = mo.sql(
-        f"""
-        -- Transform mood labels
-
-        select
-            Date as date,
-            "Mood Labels" as mood_labels,
-            "Mood Associations" as mood_assocs
-        from df_clean
-        where Name = 'Track mood'
-        """
-    )
-    return (df_moods,)
-
-
-@app.cell
-def __(df_clean, mo):
     df_daily = mo.sql(
         f"""
         -- Clean up df_clean even more
@@ -151,6 +134,23 @@ def __(df_daily, mo):
         """
     )
     return (df_weekly,)
+
+
+@app.cell
+def __(df_clean, mo):
+    df_moods = mo.sql(
+        f"""
+        -- Transform mood labels
+
+        select
+            Date as date,
+            "Mood Labels" as mood_labels,
+            "Mood Associations" as mood_assocs
+        from df_clean
+        where Name = 'Track mood'
+        """
+    )
+    return (df_moods,)
 
 
 @app.cell
