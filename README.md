@@ -30,5 +30,5 @@
   - [x] Build layout
 - [ ] Clean up
   - [ ] Unify the first few cells into one code
-  - [ ] Check for private data
-  - [ ] Unify "s and 's
+  - [x] Check for private data
+  - [x] Unify "s and 's

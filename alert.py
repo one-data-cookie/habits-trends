@@ -28,7 +28,7 @@ def __():
     from wordcloud import WordCloud
 
     load_dotenv()
-    OUTPUT_FOLDER = os.getenv('OUTPUT_FOLDER')
+    OUTPUT_FOLDER = os.getenv("OUTPUT_FOLDER")
     START_TS = datetime.now()
 
     # Also print the time
@@ -62,7 +62,7 @@ def __():
 def __(os, pd):
     ### Load data
 
-    df = pd.read_csv(os.getenv('HABITS_PATH'))
+    df = pd.read_csv(os.getenv("HABITS_PATH"))
     df
     return (df,)
 
@@ -73,18 +73,18 @@ def __(df, pd):
 
     # Map mood from Apple Health
     mood_map = {
-        'Very pleasant': '3',
-        'Pleasant': '2',
-        'Slightly pleasant': '1',
-        'Neutral': '0',
-        'Slightly unpleasant': '-1',
-        'Unpleasant': '-2',
-        'Very unpleasant': '-3',
+        "Very pleasant": "3",
+        "Pleasant": "2",
+        "Slightly pleasant": "1",
+        "Neutral": "0",
+        "Slightly unpleasant": "-1",
+        "Unpleasant": "-2",
+        "Very unpleasant": "-3",
     }
 
     # Rewrite some columns
-    df['Date'] = pd.to_datetime(df['Date'], format='%d %b %Y').dt.date
-    df['Quantity'] = df['Quantity'].map(mood_map).combine_first(df['Quantity'])
+    df["Date"] = pd.to_datetime(df["Date"], format="%d %b %Y").dt.date
+    df["Quantity"] = df["Quantity"].map(mood_map).combine_first(df["Quantity"])
     df_clean = df
     df_clean
     return df_clean, mood_map
@@ -165,15 +165,15 @@ def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
         {
             "data_column": "mood_labels",
             "title": "Mood Labels",
-            "colormap": 'viridis',
-            "subplot_pos": 1
+            "colormap": "viridis",
+            "subplot_pos": 1,
         },
         {
             "data_column": "mood_assocs",
-            "title": "Mood Associations", 
-            "colormap": 'cividis',
-            "subplot_pos": 2
-        }
+            "title": "Mood Associations",
+            "colormap": "cividis",
+            "subplot_pos": 2,
+        },
     ]
 
     # Display both word clouds
@@ -188,24 +188,24 @@ def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
         wordcloud = WordCloud(
             width=800,
             height=400,
-            background_color='white',
+            background_color="white",
             colormap=_config["colormap"],
             contour_width=1,
-            contour_color='black',
+            contour_color="black",
             prefer_horizontal=1.0,
             scale=10,
-            margin=10
+            margin=10,
         ).generate_from_frequencies(word_counts)
 
         # Plot
         plt.subplot(1, 2, _config["subplot_pos"])
-        plt.imshow(wordcloud, interpolation='bilinear')
-        plt.axis('off')
+        plt.imshow(wordcloud, interpolation="bilinear")
+        plt.axis("off")
 
     # Save images to OUTPUT_FOLDER
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     _filepath = os.path.join(OUTPUT_FOLDER, "wordclouds.png")
-    plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(_filepath, dpi=300, bbox_inches="tight")
     print(f"Wordclouds saved to: {_filepath}!")
     return df_moods_lw, word_counts, wordcloud, words
 
@@ -217,33 +217,27 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
 
     for _habit in habits:
         # Prep data
-        df_filtered = df_weekly.filter(pl.col('name') == _habit)
-        trend = df_filtered['quantity_avg'].to_list()[-8:]
-        time = df_filtered['week'].to_list()[-8:]
+        df_filtered = df_weekly.filter(pl.col("name") == _habit)
+        trend = df_filtered["quantity_avg"].to_list()[-8:]
+        time = df_filtered["week"].to_list()[-8:]
 
         # Create a 2x1 grid with different subplot types
         fig = make_subplots(
-            rows=2, cols=1,
-            specs=[
-                [{"type": "indicator"}],
-                [{"type": "xy"}]
-            ],
+            rows=2,
+            cols=1,
+            specs=[[{"type": "indicator"}], [{"type": "xy"}]],
             row_heights=[0.5, 0.5],
-            vertical_spacing=0.1
+            vertical_spacing=0.1,
         )
 
         # Create a configuration dictionary and assign
         _opts = {
-            "Track": {
-                "format": ".1f",
-                "delta_relative": True,
-                "y_range": None
-            },
+            "Track": {"format": ".1f", "delta_relative": True, "y_range": None},
             "Default": {
                 "format": ".0%",
                 "delta_relative": False,
-                "y_range": [-0.1, 1.1]
-            }
+                "y_range": [-0.1, 1.1],
+            },
         }
         _configs = _opts.get(_habit.split()[0], _opts["Default"])
 
@@ -252,22 +246,21 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
             go.Indicator(
                 mode="number+delta",
                 value=trend[-1],
-                number={
-                    "valueformat": _configs["format"]
-                },
+                number={"valueformat": _configs["format"]},
                 delta={
                     "reference": trend[-2],
                     "relative": _configs["delta_relative"],
                     "valueformat": ".0%",
-                    "increasing":
-                        {"color": "red"} if _habit.startswith("No") or _habit.endswith("screen")
-                        else None,
-                    "decreasing":
-                        {"color": "green"} if _habit.startswith("No") or _habit.endswith("screen")
-                        else None
+                    "increasing": {"color": "red"}
+                                  if _habit.startswith("No") or _habit.endswith("screen")
+                                  else None,
+                    "decreasing": {"color": "green"}
+                                  if _habit.startswith("No") or _habit.endswith("screen")
+                                  else None,
                 },
             ),
-            row=1, col=1
+            row=1,
+            col=1,
         )
 
         # Add the average line in the bottom cell first
@@ -276,11 +269,12 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
             go.Scatter(
                 x=time,
                 y=[avg_value] * len(time),  # Repeat avg for each x
-                mode='lines',
-                name='Average',
-                line=dict(color='red', dash='dash')
+                mode="lines",
+                name="Average",
+                line=dict(color="red", dash="dash"),
             ),
-            row=2, col=1
+            row=2,
+            col=1,
         )
 
         # Add the line chart in the bottom cell
@@ -288,43 +282,44 @@ def __(OUTPUT_FOLDER, df_weekly, go, make_subplots, os, pl):
             go.Scatter(
                 x=time,
                 y=trend,
-                mode='lines+markers',
-                name='Trendline',
-                line=dict(color='blue'),
-                marker=dict(size=8)
+                mode="lines+markers",
+                name="Trendline",
+                line=dict(color="blue"),
+                marker=dict(size=8),
             ),
-            row=2, col=1
+            row=2,
+            col=1,
         )
 
         # Update layout
         fig.update_layout(
             title={
-                'text': f"<u>{_habit}</u>",
-                'x': 0.5,
-                'xanchor': 'center',
-                'yanchor': 'top',
-                'font': {'size': 40}
+                "text": f"<u>{_habit}</u>",
+                "x": 0.5,
+                "xanchor": "center",
+                "yanchor": "top",
+                "font": {"size": 40},
             },
             height=500,
             width=500,
             showlegend=False,
-            plot_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor="rgba(0,0,0,0)",
             xaxis=dict(
                 showgrid=True,
-                gridcolor='rgba(200,200,200,0.5)',
+                gridcolor="rgba(200,200,200,0.5)",
                 tickformat="%m-%d",
                 tickmode="array",
-                tickvals=[date for date in time if date.weekday() == 0]
+                tickvals=[date for date in time if date.weekday() == 0],
             ),
             yaxis=dict(
                 zeroline=True,
-                zerolinecolor='rgba(200,200,200,0.5)',
+                zerolinecolor="rgba(200,200,200,0.5)",
                 showgrid=True,
                 automargin=True,
-                gridcolor='rgba(200,200,200,0.5)',
+                gridcolor="rgba(200,200,200,0.5)",
                 range=_configs["y_range"],
-                tickformat=_configs["format"]
-            )
+                tickformat=_configs["format"],
+            ),
         )
 
         # Save images to OUTPUT_FOLDER
@@ -345,12 +340,10 @@ def __(START_TS, datetime, pl, timedelta):
         lw_start = datetime.combine(lw_end - timedelta(days=6), datetime.min.time())
 
         # Filter and transform the DataFrame
-        df_lw = df.filter(
-            (pl.col('date') >= lw_start) & 
-            (pl.col('date') <= lw_end)
-        )
+        df_lw = df.filter((pl.col("date") >= lw_start) & (pl.col("date") <= lw_end))
         df_lw = df_lw.to_pandas()
         return df_lw
+
     return (df_filter_lw,)
 
 
@@ -371,10 +364,12 @@ def __(
     df_daily_lw = df_filter_lw(df_daily)
 
     # Pivot the data to create a matrix of `quantity` values with `day` as columns and `name` as rows
-    heatmap_data = df_daily_lw.pivot_table(index='name', columns='day', values='quantity', aggfunc='mean').fillna(0)
+    heatmap_data = df_daily_lw.pivot_table(
+        index="name", columns="day", values="quantity", aggfunc="mean"
+    ).fillna(0)
 
     # Sort days in week order
-    day_order = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    day_order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     heatmap_data = heatmap_data.reindex(columns=day_order)
 
     # Sort metrics in decreasing alphabetical order
@@ -386,7 +381,7 @@ def __(
     data_matrix = heatmap_data.to_numpy()
 
     # Adjust the transparency (alpha) of the colormap
-    base_cmap = plt.colormaps.get_cmap('RdYlGn')
+    base_cmap = plt.colormaps.get_cmap("RdYlGn")
     colors = base_cmap(np.linspace(0, 1, 256))  # Extract original colours
     colors[:, -1] = 0.5  # Set alpha transparency to 50%
     cmap = LinearSegmentedColormap.from_list("PastelRdYlGn", colors)
@@ -397,19 +392,30 @@ def __(
     # Normalize the data relative to each row
     for i, row in enumerate(data_matrix):
         # Only normalize for "track" metrics
-        vmin, vmax = (np.min(row), np.max(row)) \
-          if metrics[i].split()[0] == "Track" \
-          else (0, 1)
+        vmin, vmax = (
+            (np.min(row), np.max(row))
+            if metrics[i].split()[0] == "Track"
+            else (0, 1)
+        )
         norm = Normalize(vmin=vmin, vmax=vmax)
 
         for j, value in enumerate(row):
             # Invert colour for some metrics
-            value_adj = vmax + vmin - value \
-              if metrics[i].startswith("No") or metrics[i].endswith("screen") \
-              else value
+            value_adj = (
+                vmax + vmin - value
+                if metrics[i].startswith("No") or metrics[i].endswith("screen")
+                else value
+            )
             color = cmap(norm(value_adj)) if vmax > 0 else (1, 1, 1, 0.5)
             _ax.add_patch(plt.Rectangle((j, i), 1, 1, color=color))
-            _ax.text(j + 0.5, i + 0.5, f"{value:.1f}", ha="center", va="center", color="black")
+            _ax.text(
+                j + 0.5,
+                i + 0.5,
+                f"{value:.1f}",
+                ha="center",
+                va="center",
+                color="black",
+            )
 
     # Configure axis labels and ticks
     _ax.set_xticks(np.arange(len(days)) + 0.5)
@@ -423,13 +429,13 @@ def __(
     # Add grid lines
     _ax.set_xticks(np.arange(len(days)), minor=True)
     _ax.set_yticks(np.arange(len(metrics)), minor=True)
-    _ax.grid(which="minor", color="black", linestyle='-', linewidth=0.5)
+    _ax.grid(which="minor", color="black", linestyle="-", linewidth=0.5)
     _ax.tick_params(which="minor", size=0)
 
     # Save images to OUTPUT_FOLDER
     os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     _filepath = os.path.join(OUTPUT_FOLDER, "heatmap.png")
-    plt.savefig(_filepath, dpi=300, bbox_inches='tight')
+    plt.savefig(_filepath, dpi=300, bbox_inches="tight")
     print(f"Heatmap saved to: {_filepath}!")
     return (
         base_cmap,
@@ -564,7 +570,7 @@ def __(
     ### Send the email
 
     # Email details
-    email = os.getenv('EMAIL')
+    email = os.getenv("EMAIL")
     subject = "How was last week?"
 
     # Create the email
@@ -596,7 +602,9 @@ def __(
     html_content_cid = html_content.replace(f"wordclouds.png", "cid:image1")
     html_content_cid = html_content_cid.replace(f"heatmap.png", "cid:image2")
     for _idx, habit in enumerate(habits):
-        html_content_cid = html_content_cid.replace(f"{habit}.png", f"cid:image{_idx+3}")
+        html_content_cid = html_content_cid.replace(
+            f"{habit}.png", f"cid:image{_idx+3}"
+        )
 
     # Update the HTML part with the modified content
     html_part.set_payload(html_content_cid)
@@ -605,7 +613,7 @@ def __(
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            server.login(email, os.getenv('PASSWORD'))
+            server.login(email, os.getenv("PASSWORD"))
             server.sendmail(email, email, message.as_string())
         print("Email with dashboard sent successfully!")
     except Exception as e:
