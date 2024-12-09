@@ -396,7 +396,10 @@ def __(
 
     # Normalize the data relative to each row
     for i, row in enumerate(data_matrix):
-        vmin, vmax = np.min(row), np.max(row)
+        # Only normalize for "track" metrics
+        vmin, vmax = (np.min(row), np.max(row)) \
+          if metrics[i].split()[0] == "Track" \
+          else (0, 1)
         norm = Normalize(vmin=vmin, vmax=vmax)
 
         for j, value in enumerate(row):
