@@ -82,33 +82,42 @@ def __(df_clean, mo):
 
 @app.cell
 def __(df_daily, mo):
-    # Get unique values of the 'name' column
+    # Create habits dropdown
     habits = sorted(df_daily["name"].unique(), reverse=True)
-    dropdown = mo.ui.dropdown(habits)
-    dropdown
-    return dropdown, habits
+
+    dd_habits = mo.ui.dropdown(habits, value=habits[0])
+    dd_habits
+    return dd_habits, habits
 
 
 @app.cell
-def __(df_daily, dropdown, mo):
+def __(mo):
+    # Create weeks dropdown
+    weeks = ['1', '2', '4', '6', '8']
+
+    dd_weeks = mo.ui.dropdown(weeks, value='4')
+    dd_weeks
+    return dd_weeks, weeks
+
+
+@app.cell
+def __(dd_habits, dd_weeks, df_daily, mo):
     df_daily_avg = mo.sql(
         f"""
         -- Calc moving avg
 
         select
             date,
+            day,
             name,
-            quantity,
-            avg(quantity) over (
+            round(quantity, 2) as quantity,
+            round(avg(quantity) over (
                 partition by name
                 order by date
-                rows between 41 preceding and current row
-            ) as moving_avg,
-            avg(quantity) over (
-                partition by name
-            ) as overall_avg,
+                rows between '{dd_weeks.value}'::int * 7 - 1 preceding and current row
+            ), 2) as moving_avg
         from df_daily
-        where name = '{dropdown.value}'
+        where name = '{dd_habits.value}'
         order by date desc
         """
     )
@@ -116,61 +125,84 @@ def __(df_daily, dropdown, mo):
 
 
 @app.cell
-def __(alt, df_daily_avg, dropdown, mo):
+def __(alt, dd_habits, dd_weeks, df_daily_avg, mo):
     ### Visualise in Altair
 
-    # Convert to Pandas and extract only last 28d
+    # Prep a bit
     _df_daily_avg = df_daily_avg.to_pandas()
-    _df_daily_6w = _df_daily_avg.iloc[:42]
+    _days_cut = int(dd_weeks.value) * 7
+
+    _df_daily_cut = _df_daily_avg.iloc[:_days_cut]
 
     # Moving Average Line Chart
-    moving_avg_chart = alt.Chart(_df_daily_avg).mark_line(color="green").encode(
+    moving_chart = alt.Chart(_df_daily_avg).mark_line(color="green").encode(
         x="date:T",
         y=alt.Y(
             "moving_avg:Q",
             scale=(
                 alt.Scale(domain=[0, 1])  # Fixed domain for specific metrics
-                if dropdown.value.split()[0] != "Track"
+                if dd_habits.value.split()[0] != "Track"
                 else alt.Scale(domain=[_df_daily_avg["moving_avg"].min()*0.9, _df_daily_avg["moving_avg"].max()*1.1])
             )
-        )
+        ),
+        tooltip=['day', 'date:T', alt.Tooltip('moving_avg:Q', format='.2f')]
     ).properties(
-        title=f"Moving 6w Avg of {dropdown.value} | Avg: {_df_daily_avg['quantity'].mean():.2f}",
+        title=f"Moving {dd_weeks.value}w Avg of {dd_habits.value} | Avg: {_df_daily_avg['quantity'].mean():.2f}",
         width=400,
         height=400
     )
 
     # Add dots to easily locate data points
-    dots = alt.Chart(_df_daily_avg).mark_point(filled=True, size=20, color="green").encode(
-            x="date:T",
-            y="moving_avg:Q",
-            tooltip=["date:T", "moving_avg:Q"]  # Tooltip for points
+    moving_dots = alt.Chart(_df_daily_avg).mark_point(filled=True, size=25, color="green").encode(
+        x="date:T",
+        y="moving_avg:Q"
     )
 
     # Mean line for Overall Average
-    mean_line = alt.Chart(_df_daily_avg).mark_rule(color="red", strokeDash=[5, 5]).encode(
-        y="overall_avg:Q"
+    _df_daily_avg_mean = _df_daily_avg['quantity'].mean()
+    moving_mean = alt.Chart(_df_daily_avg).mark_rule(color="red", strokeDash=[5, 5]).encode(
+        y=alt.datum(_df_daily_avg_mean)
     )
 
     # Daily Quantity Bar Chart (Last 28 Days)
-    bar_chart = alt.Chart(_df_daily_6w).mark_bar(color="skyblue").encode(
+    daily_chart = alt.Chart(_df_daily_cut).mark_bar(color="skyblue").encode(
         x="date:T",
         y=alt.Y("quantity:Q", 
             scale=alt.Scale(domain=[0, 1]) 
-            if dropdown.value.split()[0] != "Track" 
+            if dd_habits.value.split()[0] != "Track" 
             else alt.Scale()
         ),
-        tooltip=["date:T", "quantity:Q"]
+        tooltip=['day', 'date:T', alt.Tooltip('quantity:Q', format='.2f')]
     ).properties(
-        title=f"Last 6w of {dropdown.value} | Avg: {_df_daily_6w['quantity'].mean():.2f}",
+        title=f"Last {dd_weeks.value}w of {dd_habits.value} | Avg: {_df_daily_cut['quantity'].mean():.2f}",
         width=400,
         height=400
     )
 
+    # Mean line for Overall Average
+    _df_daily_cut_mean = _df_daily_cut['quantity'].mean()
+    daily_mean = alt.Chart(_df_daily_cut).mark_rule(color="red", strokeDash=[5, 5]).encode(
+        y=alt.datum(_df_daily_cut_mean)
+    )
+
     # Display the chart
-    chart_l = mo.ui.altair_chart(moving_avg_chart + dots + mean_line)
-    chart_r = mo.ui.altair_chart(bar_chart)
-    return bar_chart, chart_l, chart_r, dots, mean_line, moving_avg_chart
+    chart_l = mo.ui.altair_chart(moving_chart + moving_dots + moving_mean).interactive(False)
+    chart_r = mo.ui.altair_chart(daily_chart + daily_mean).interactive(False)
+    return (
+        chart_l,
+        chart_r,
+        daily_chart,
+        daily_mean,
+        moving_chart,
+        moving_dots,
+        moving_mean,
+    )
+
+
+@app.cell
+def __(dd_habits, dd_weeks, mo):
+    mo.md(f"""# **Stats for {dd_habits.value} | {dd_weeks.value} weeks**""")
+    return
 
 
 @app.cell

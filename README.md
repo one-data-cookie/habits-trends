@@ -22,11 +22,13 @@
 - [x] Schedule alert.py
   - [x] Automatic run through plist
   - [x] Create habit and filter it out
-- [ ] Create proper app.py
-  - [ ] Fix moving_avg vs overall_avg
-  - [ ] Fix clicking
-  - [ ] Improve visual
-  - [ ] Build layout
-- [ ] Open-source this
+- [x] Create proper app.py
+  - [x] Make the cut flexible
+  - [x] Fix moving_avg vs overall_avg
+  - [x] Fix clicking
+  - [x] Improve visual
+  - [x] Build layout
+- [ ] Clean up
   - [ ] Unify the first few cells into one code
   - [ ] Check for private data
+  - [ ] Unify "s and 's
