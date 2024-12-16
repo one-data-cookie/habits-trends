@@ -29,6 +29,7 @@ def __():
 
     load_dotenv()
     OUTPUT_FOLDER = os.getenv("OUTPUT_FOLDER")
+    HABITS_PATH = os.getenv("HABITS_PATH")
     START_TS = datetime.now()
 
     # Also print the time
@@ -41,6 +42,7 @@ def __():
         MIMEText,
         Normalize,
         OUTPUT_FOLDER,
+        HABITS_PATH,
         START_TS,
         WordCloud,
         datetime,
@@ -59,12 +61,24 @@ def __():
 
 
 @app.cell
-def __(os, pd):
+def __(HABITS_PATH, START_TS, datetime, os, pd, timedelta):
     ### Load data
 
-    df = pd.read_csv(os.getenv("HABITS_PATH"))
+    # Get the file modification time
+    file_mod_time = datetime.fromtimestamp(os.path.getmtime(HABITS_PATH))
+
+    # Calculate the start of the current week (Monday at midnight)
+    start_of_week = START_TS - timedelta(days=START_TS.weekday())  # Get Monday
+    start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)  # Set to midnight
+
+    # Check if the file has been modified this week
+    if file_mod_time < start_of_week:
+        raise RuntimeError("The file has not been updated this week. Update the file and try again.")
+
+    # Load data
+    df = pd.read_csv(HABITS_PATH)
     df
-    return (df,)
+    return df, file_mod_time, start_of_week
 
 
 @app.cell
