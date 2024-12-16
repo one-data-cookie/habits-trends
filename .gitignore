@@ -1,6 +1,7 @@
 # Local files
 .DS_Store
 .alert.*
+.ruff_cache
 output/
 AwesomeHabits.csv
 raycast.sh
