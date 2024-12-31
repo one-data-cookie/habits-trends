@@ -11,7 +11,7 @@ This is how it looks 👇
 ![screenshot](screenshot.png)
 
 If you wish to use it yourself, you can download your CSV file from the app,
-configure your environment variables, and then run:
+configure your environment variables, and then run it using [`uv`](https://github.com/astral-sh/uv):
 
 ```bash
 uv sync
