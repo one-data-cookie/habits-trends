@@ -6,6 +6,8 @@ As a result, I built these small Python scripts using [marimo](https://marimo.io
 that provide me both with an [interactive dashboard](app.py) and
 [automated weekly email reports](alert.py).
 
+This is how it looks 👇
+
 ![screenshot](screenshot.png)
 
 If you wish to use it yourself, you can download your CSV file from the app,
