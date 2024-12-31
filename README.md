@@ -1,34 +1,24 @@
-## TODOs:
-- [x] Zjistit ohledne API
-- [x] Nasetupovat posilani emails
-- [x] Nasetupovat otevirani webapp
-- [x] Nasetupovat sdileni file
-- [x] Make the files private
-- [x] Dat vsecko do novych — alert.py a app.py
-- [x] Udelat designs
-- [x] Zpracovat goals
-- [x] Prejmenovat habits
-- [x] Pripravit novy SQL
-- [x] Fixnout alert.py
-  - [x] 8w, trendline
-  - [x] dynamic filter of lw
-  - [x] swap arrows
-  - [x] clean up output, not just png
-- [x] Dodelat alert.py
-  - [x] mood wordclouds
-  - [x] html
-  - [x] email sending
-  - [x] clean up
-- [x] Schedule alert.py
-  - [x] Automatic run through plist
-  - [x] Create habit and filter it out
-- [x] Create proper app.py
-  - [x] Make the cut flexible
-  - [x] Fix moving_avg vs overall_avg
-  - [x] Fix clicking
-  - [x] Improve visual
-  - [x] Build layout
-- [x] Clean up
-  - [x] Unify the first few cells
-  - [x] Check for private data
-  - [x] Unify "s and 's
+# habits-tracker
+
+I've been using [Awesome Habits](https://www.awesome-habits.com/) for tracking my habits
+but its analytics capabilities are not enough for my data-focused mind.
+As a result, I built these small Python scripts using [marimo](https://marimo.io/)
+that provide me both with an [interactive dashboard](app.py) and
+[automated weekly email reports](alert.py).
+
+![screenshot](screenshot.png)
+
+If you wish to use it yourself, you can download your CSV file from the app,
+configure your environment variables, and then run:
+
+```bash
+uv sync
+uv run marimo run app.py
+uv run marimo run alert.py
+```
+
+Note that the code will need some tweaking as its specifically designed to fit my needs.
+You will find a way to automate CSV file sharing
+(e.g. via [Apple Shortcuts](https://support.apple.com/en-gb/guide/shortcuts/welcome/ios))
+and scheduling
+(e.g. via [`launchd`](https://support.apple.com/en-gb/guide/terminal/apdc6c1077b-5d5d-4d35-9c19-60f2397b2369/mac)).
