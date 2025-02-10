@@ -195,7 +195,7 @@ def __(Counter, OUTPUT_FOLDER, WordCloud, df_filter_lw, df_moods, os, plt):
 
     for _config in _configs:
         # Split and count words
-        words = df_moods_lw[_config["data_column"]].str.split(", ").explode().tolist()
+        words = df_moods_lw[_config["data_column"]].fillna("").str.split(", ").explode().tolist()
         word_counts = Counter(words)
 
         # Create word cloud
@@ -467,6 +467,7 @@ def __(
         norm,
         row,
         value,
+        value_adj,
         vmax,
         vmin,
     )
