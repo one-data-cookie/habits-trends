@@ -16,6 +16,7 @@ def __():
     import plotly.graph_objects as go
     import polars as pl
     import smtplib
+    import time as tm
 
     from collections import Counter
     from datetime import datetime, timedelta
@@ -56,13 +57,19 @@ def __():
         pl,
         plt,
         smtplib,
+        tm,
         timedelta,
     )
 
 
 @app.cell
-def __(HABITS_PATH, START_TS, datetime, os, pd, timedelta):
+def __(HABITS_PATH, START_TS, datetime, os, pd, tm, timedelta):
     ### Load data
+    
+    # Trigger iCloud to sync the file if needed
+    with open(HABITS_PATH, "rb") as f:
+        f.read(1)  # Just read 1 byte to prompt sync
+    tm.sleep(1)  # Wait a bit for iCloud to fully sync metadata
 
     # Get the file modification time
     file_mod_time = datetime.fromtimestamp(os.path.getmtime(HABITS_PATH))
