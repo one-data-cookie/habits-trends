@@ -20,7 +20,7 @@ uv run marimo run alert.py
 ```
 
 Note that the code will need some tweaking as its specifically designed to fit my needs.
-You will find a way to automate CSV file sharing
+You will also need to find your own way to automate CSV file sharing
 (e.g. via [Apple Shortcuts](https://support.apple.com/en-gb/guide/shortcuts/welcome/ios))
 and scheduling
 (e.g. via [`launchd`](https://support.apple.com/en-gb/guide/terminal/apdc6c1077b-5d5d-4d35-9c19-60f2397b2369/mac)).
