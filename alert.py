@@ -78,8 +78,12 @@ def __(HABITS_PATH, START_TS, datetime, os, pd, tm, timedelta):
     start_of_week = START_TS - timedelta(days=START_TS.weekday())  # Get Monday
     start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)  # Set to midnight
 
-    # Check if the file has been modified this week
-    if file_mod_time < start_of_week:
+    # Allow a grace period before week start
+    grace_period = timedelta(hours=3)  
+    effective_start = start_of_week - grace_period
+
+    # Check if the file has been modified recently enough
+    if file_mod_time < effective_start:
         raise RuntimeError("The file has not been updated this week. Update the file and try again.")
 
     # Load data
