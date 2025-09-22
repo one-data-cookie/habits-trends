@@ -137,6 +137,7 @@ def __(df_clean, mo):
         from df_clean
         where
             Name not in ('Mark habits', 'Export habits')
+            and Status != 'Skipped'
             and Date < date_trunc('week', current_date)
         """
     )
@@ -172,7 +173,9 @@ def __(df_clean, mo):
             "Mood Labels" as mood_labels,
             "Mood Associations" as mood_assocs
         from df_clean
-        where Name = 'Track mood'
+        where
+            Name = 'Track mood'
+            and Status != 'Skipped'
         """
     )
     return (df_moods,)

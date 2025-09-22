@@ -98,6 +98,7 @@ def __(df_clean, mo):
         from df_clean
         where
             Name not in ('Mark habits', 'Export habits')
+            and Status != 'Skipped'
             and Date < date_trunc('week', current_date)
         """
     )

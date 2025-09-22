@@ -44,7 +44,9 @@ def __(df, mo):
                     else Quantity::float 
                 end as quantity
             from df
-            where Name not in ('Track mood', 'Mark habits')
+            where
+                Name not in ('Track mood', 'Mark habits')
+                and Status != 'Skipped'
         )
 
         select
