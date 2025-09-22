@@ -2,6 +2,7 @@
 .DS_Store
 .alert.*
 .ruff_cache
+.vscode/
 output/
 AwesomeHabits.csv
 raycast.sh
