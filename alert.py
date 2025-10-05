@@ -68,7 +68,7 @@ def __(HABITS_PATH, START_TS, datetime, os, pd, tm, timedelta):
     
     # Trigger iCloud to sync the file if needed
     with open(HABITS_PATH, "rb") as f:
-        f.read(1)  # Just read 1 byte to prompt sync
+        _ = f.read()  # Read the entire file to prompt sync
     tm.sleep(1)  # Wait a bit for iCloud to fully sync metadata
 
     # Get the file modification time
