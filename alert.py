@@ -108,7 +108,7 @@ def __(df, pd):
     }
 
     # Rewrite some columns
-    df["Date"] = pd.to_datetime(df["Date"], format="%d %b %Y").dt.date
+    df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d").dt.date
     df["Quantity"] = df["Quantity"].map(mood_map).combine_first(df["Quantity"])
     df_clean = df
     df_clean
